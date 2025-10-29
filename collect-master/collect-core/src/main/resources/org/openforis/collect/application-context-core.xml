@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:tx="http://www.springframework.org/schema/tx" 
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans 
+		https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context 
+		https://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/util 
+		https://www.springframework.org/schema/util/spring-util.xsd
+		http://www.springframework.org/schema/tx 
+		https://www.springframework.org/schema/tx/spring-tx.xsd"
+	default-lazy-init="true"
+	default-autowire="byName">
+	
+	<context:component-scan base-package="org.openforis.collect" />
+	<context:component-scan base-package="org.openforis.concurrency" />
+    <context:annotation-config/>
+    
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- enables interpretation of the @Transactional annotations for declarative transaction management-->
+	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
+		
+	<!-- Start of JOOQ configuration -->
+	
+	<!-- Configure jOOQ's ConnectionProvider to use Spring's TransactionAwareDataSourceProxy,
+         which can dynamically discover the transaction context -->
+    <bean id="transactionAwareDataSource"
+        class="org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy">
+        <constructor-arg ref="dataSource" />
+    </bean>
+    
+	<bean class="org.jooq.impl.DataSourceConnectionProvider" name="connectionProvider">
+        <constructor-arg ref="transactionAwareDataSource" />
+    </bean>
+
+ 	<bean id="jooqConfig" autowire="no"
+		class="org.jooq.impl.DialectAwareJooqConfiguration">
+		<constructor-arg ref="connectionProvider" />
+	</bean>
+
+	<!-- Configure the DSL object, optionally overriding jOOQ Exceptions with 
+		Spring Exceptions -->
+	<bean id="dsl" class="org.openforis.collect.persistence.jooq.CollectDSLContext">
+		<constructor-arg ref="jooqConfig" />
+	</bean>
+    
+    <!-- End of JOOQ configuration -->
+
+	<!-- ===================================== -->
+	<!-- Liquibase -->
+	<!-- ===================================== -->
+	<bean id="liquibase" class="org.openforis.collect.persistence.liquibase.DatabaseAwareSpringLiquibase"
+			lazy-init="false">
+		<property name="dataSource" ref="transactionAwareDataSource" />
+		<property name="changeLog" value="classpath:org/openforis/collect/db/changelog/db.changelog-DBMS_ID.xml" />
+		<property name="defaultSchema" value="collect" />
+	</bean>
+	
+	<!-- ApplicationContext -->
+	<bean id="collectApplicationContext" class="org.openforis.collect.application.SpringCollectApplicationContext" />
+	
+	<!-- DAOs -->
+	<bean id="applicationInfoDao" class="org.openforis.collect.persistence.ApplicationInfoDao"
+		lazy-init="false" depends-on="liquibase">
+		<property name="dsl" ref="dsl" />
+	</bean>
+	<bean id="codeListItemDao" class="org.openforis.collect.persistence.CodeListItemDao"
+		lazy-init="false" depends-on="liquibase">
+		<property name="dsl" ref="dsl" />
+		<property name="useCache" value="true" />
+	</bean>
+	<bean id="configurationDao" class="org.openforis.collect.persistence.ConfigurationDao"
+		lazy-init="false" depends-on="liquibase">
+  		<property name="dsl" ref="dsl" />
+	</bean>
+	<bean id="dynamicTableDao" class="org.openforis.collect.persistence.DynamicTableDao">
+  		<property name="dsl" ref="dsl" />
+	</bean>
+	<bean id="imageryDao" class="org.openforis.collect.persistence.ImageryDao">
+  		<constructor-arg ref="jooqConfig" />
+	</bean>
+	<bean id="logoDao" class="org.openforis.collect.persistence.LogoDao">
+  		<property name="dsl" ref="dsl" />
+	</bean>
+	<bean id="recordDao" class="org.openforis.collect.persistence.RecordDao">
+  		<property name="dsl" ref="dsl" />
+	</bean>
+	<bean id="samplingDesignDao" class="org.openforis.collect.persistence.SamplingDesignDao">
+		<property name="dsl" ref="dsl" />
+	</bean>
+	<bean id="surveyDao" class="org.openforis.collect.persistence.SurveyDao"
+		init-method="init">
+		<property name="dsl" ref="dsl" />
+	</bean>
+	<bean id="surveyFileDao" class="org.openforis.collect.persistence.SurveyFileDao">
+		<property name="dsl" ref="dsl" />
+	</bean>
+	<bean id="taxonomyDao" class="org.openforis.collect.persistence.TaxonomyDao">
+  		<property name="dsl" ref="dsl" />
+	</bean>
+	<bean id="taxonDao" class="org.openforis.collect.persistence.TaxonDao">
+  		<property name="dsl" ref="dsl" />
+	</bean>
+	<bean id="taxonVernacularNameDao" class="org.openforis.collect.persistence.TaxonVernacularNameDao">
+  		<property name="dsl" ref="dsl" />
+	</bean>
+	<bean id="userDao" class="org.openforis.collect.persistence.UserDao">
+  		<property name="dsl" ref="dsl" />
+	</bean>
+	<bean id="userGroupDao" class="org.openforis.collect.persistence.UserGroupDao">
+  		<constructor-arg ref="jooqConfig" />
+	</bean>
+	
+	<!--  Managers -->
+	<bean id="codeListManager" 			class="org.openforis.collect.manager.CodeListManager" />
+	<bean id="configurationManager" 	class="org.openforis.collect.manager.ConfigurationManager" 
+		init-method="init" lazy-init="false" />
+	<bean id="databaseVersionManager" 	class="org.openforis.collect.manager.DatabaseVersionManager" />
+	<bean id="logoManager" 				class="org.openforis.collect.manager.LogoManager" />
+	<bean id="persistedRecordIndexManager" class="org.openforis.collect.manager.RecordIndexManager"
+		init-method="init" lazy-init="false" autowire="byName" />
+	<bean id="recordFileManager" 		class="org.openforis.collect.manager.RecordFileManager" 
+		init-method="init" />
+	<bean id="recordManager" 			class="org.openforis.collect.manager.RecordManager" 
+		init-method="init" />	
+	<bean id="recordIndexManager" 		class="org.openforis.collect.manager.RecordIndexManager" 
+		lazy-init="false" init-method="init" />
+	<bean id="samplingDesignManager"    class="org.openforis.collect.manager.SamplingDesignManager" />
+	<bean id="sessionRecordFileManager" class="org.openforis.collect.manager.SessionRecordFileManager" 
+		init-method="init" destroy-method="destroy" />
+  	<bean id="speciesManager"           class="org.openforis.collect.manager.SpeciesManager" />
+	<bean id="surveyManager"	 		class="org.openforis.collect.manager.SurveyManager" 
+		init-method="init" />
+	<bean id="userManager" 				class="org.openforis.collect.manager.LocalUserManager" />
+	<bean id="userGroupManager" 		class="org.openforis.collect.manager.LocalUserGroupManager" />
+
+	<!--  Services -->
+	<bean id="codeListService"	 		class="org.openforis.collect.service.CollectCodeListService" />
+	<bean id="recordFileService"	 	class="org.openforis.collect.service.CollectRecordFileService" />
+	<bean id="speciesListService"	 	class="org.openforis.collect.service.CollectSpeciesListService" />
+	
+	<!-- Expression Factory -->
+	<bean id="expressionFactory" class="org.openforis.idm.model.expression.ExpressionFactory" />
+	<bean id="expressionValidator" class="org.openforis.idm.metamodel.expression.ExpressionValidator">
+		<constructor-arg ref="expressionFactory" />
+	</bean>
+	<bean id="validator" 					class="org.openforis.collect.model.validation.CollectValidator" />
+	<bean id="surveyValidator" 				class="org.openforis.collect.manager.validation.SurveyValidator" />
+	<bean id="lookupProvider" 				class="org.openforis.collect.persistence.DatabaseLookupProvider" />
+	<bean id="externalCodeListProvider" 	class="org.openforis.collect.persistence.DatabaseExternalCodeListProvider" />
+
+	<bean id="collectSurveyContext" class="org.openforis.collect.model.CollectSurveyContext">
+	    <constructor-arg ref="expressionFactory" />
+	    <constructor-arg ref="validator" />
+	    <property name="externalCodeListProvider" ref="externalCodeListProvider" />
+   		<property name="codeListService" ref="codeListService" />
+   		<property name="speciesListService" ref="speciesListService" />
+	</bean>
+
+	<bean id="collectSurveySerializer" class="org.openforis.collect.persistence.xml.CollectSurveyIdmlBinder">
+		 <constructor-arg ref="collectSurveyContext" />
+	</bean>
+		
+	<!-- XML DataMarshaller -->
+	<bean id="dataMarshaller" class="org.openforis.collect.persistence.xml.DataMarshaller" lazy-init="false" autowire-candidate="true" autowire="byName" />
+	
+	<bean name="messageSource"
+		class="org.springframework.context.support.ResourceBundleMessageSource">
+		<property name="basename">
+			<value>org/openforis/collect/resourcebundles/validation</value>
+		</property>
+		<property name="defaultEncoding" value="UTF-8" />
+	</bean>
+	
+	<!-- Async job executor -->
+	<bean id="jobExecutor" class="org.springframework.core.task.SimpleAsyncTaskExecutor">
+		<property name="concurrencyLimit" value="20"/>
+	</bean>
+	
+	<bean id="jobManager" class="org.openforis.collect.concurrency.CollectJobManager" 
+		destroy-method="destroy" />
+
+</beans>

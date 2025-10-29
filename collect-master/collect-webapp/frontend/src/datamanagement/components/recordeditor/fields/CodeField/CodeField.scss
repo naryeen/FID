@@ -1,0 +1,20 @@
+.code-field-item-label {
+  display: inline-block;
+  width: 100%;
+  padding: 4px;
+
+  .text {
+    display: inline-block;
+  }
+
+  &.single-line {
+    .text {
+      width: 100%;
+    }
+  }
+  &.with-info-icon {
+    .text {
+      width: calc(100% - 30px);
+    }
+  }
+}

@@ -1,0 +1,111 @@
+<?component name="fieldErrorHandler" class="org.openforis.collect.designer.component.FieldErrorHandler"?>
+<?component name="collapsiblepanel" class="org.openforis.collect.designer.component.CollapsiblePanel"?>
+<zk>
+	<custom-attributes
+		otherGeneralDetailsForm="${arg.otherGeneralDetailsForm}" />
+	<custom-attributes
+		otherMinorGeneralDetailsForm="${arg.otherMinorGeneralDetailsForm}" />
+	<custom-attributes
+		otherAttributesForm="${arg.otherAttributesForm}" />
+	<custom-attributes
+		otherLabelsForm="${arg.otherLabelsForm}" />
+	<custom-attributes
+		otherLayoutForm="${arg.otherLayoutForm}" />
+
+	<include id="nodeCommonInclude"
+		src="survey_edit/schema/node_common.zul"
+		otherGeneralDetailsForm="${otherGeneralDetailsForm}"
+		otherMinorGeneralDetailsForm="${otherMinorGeneralDetailsForm}"
+		otherAttributesForm="${otherAttributesForm}"
+		otherLabelsForm="${otherLabelsForm}"
+		otherLayoutForm="${otherLayoutForm}" />
+
+	<collapsiblepanel open="false"
+		visible="@load(not vm.collectEarthSurvey)"
+		captionLabel="${labels.survey.schema.attribute.map_options.caption}">
+		<grid class="inner">
+			<columns>
+				<column width="150px" />
+				<column />
+			</columns>
+			<rows>
+				<row>
+					<fieldErrorHandler
+						message="@load(vmsgs['showInMapBalloon'])">
+						<label
+							value="${labels.survey.schema.attribute.show_in_map_balloon}:" />
+					</fieldErrorHandler>
+					<fieldErrorHandler
+						message="@load(vmsgs['showInMapBalloon'])">
+						<checkbox checked="@bind(fx.showInMapBalloon)"
+							onCheck="@command('applyChanges')" />
+					</fieldErrorHandler>
+				</row>
+			</rows>
+		</grid>
+	</collapsiblepanel>
+
+	<fieldErrorHandler message="@load(vmsgs['attributeDefaults'])" sclass="full-width">
+		<collapsiblepanel open="${not empty vm.attributeDefaults}"
+			captionLabel="@load(fx.calculated ? 
+				labels.survey.schema.attribute.attribute_default.calculated_value.table_heading: 
+				labels.survey.schema.attribute.attribute_default.table_heading)">
+			<grid class="inner">
+				<columns>
+					<column width="200px" />
+					<column />
+				</columns>
+				<rows>
+					<row
+						visible="@load(not vm.collectEarthSurvey and not fx.calculated)">
+						<fieldErrorHandler
+							message="@load(vmsgs['phaseToApplyDefaultValue'])">
+							<label
+								value="${labels.survey.schema.attribute.phase_to_apply_default_value}:" />
+						</fieldErrorHandler>
+						<fieldErrorHandler
+							message="@load(vmsgs['phaseToApplyDefaultValue'])">
+							<combobox
+								selectedItem="@bind(fx.phaseToApplyDefaultValue)"
+								onChange="@command('applyChanges')"
+								model="@load(vm.editableRecordStepNames)">
+								<template name="model">
+									<comboitem value="@load(each)"
+										label="${c:l('workflow.data_entry_type.'.concat(each.toLowerCase()))}" />
+								</template>
+							</combobox>
+						</fieldErrorHandler>
+					</row>
+				</rows>
+			</grid>
+			<include src="survey_edit/schema/attribute_defaults_list.zul" />
+		</collapsiblepanel>
+	</fieldErrorHandler>
+
+	<fieldErrorHandler message="@load(vmsgs['checks'])" sclass="full-width">
+		<collapsiblepanel open="${not empty vm.checks}"
+			captionLabel="${labels.survey.schema.node.checks}:">
+			<include src="survey_edit/schema/check/list.zul" />
+		</collapsiblepanel> 
+	</fieldErrorHandler>
+
+	<fieldErrorHandler message="@load(vmsgs['referencedAttributePath'])" sclass="full-width">
+		<collapsiblepanel open="@load(not empty fx.referencedAttributePath)"
+			captionLabel="${labels.survey.schema.attribute.referenced_attribute}"
+			visible="@load(not vm.collectEarthSurvey)">
+			<div>
+				<textbox width="400px"
+								value="@bind(fx.referencedAttributePath)" readonly="true" />
+				<button sclass="icon"
+					tooltiptext="${labels.survey.schema.attribute.select_referenced_attribute}"
+					onClick="@command('openReferencedAttributeSelector')"
+					image="/assets/images/tree-small.png" />
+				<button
+					label="${labels.survey.schema.attribute.generate_entity_alias.$}"
+					tooltiptext="${labels.survey.schema.attribute.generate_entity_alias.tooltip}"
+					onClick="@command('generateEntityAlias')"
+					disabled="@load(empty fx.referencedAttributePath)" />
+			</div>
+		</collapsiblepanel>
+	</fieldErrorHandler>
+</zk>

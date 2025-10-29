@@ -1,0 +1,66 @@
+<?component name="fieldErrorHandler" class="org.openforis.collect.designer.component.FieldErrorHandler"?>
+<zk>
+	<grid class="inner">
+		<columns>
+			<column width="150px" />
+			<column />
+		</columns>
+		<rows>
+			<row>
+				<fieldErrorHandler message="@load(vmsgs['type'])">
+					<label
+						value="${labels.survey.schema.attribute.calculated.type.$}:" />
+				</fieldErrorHandler>
+				<fieldErrorHandler message="@load(vmsgs['type'])">
+					<radiogroup selectedItem="@bind(fx.type)"
+						onCheck="@command('applyChanges')">
+						<radio
+							label="${labels.survey.schema.attribute.calculated.type.integer}"
+							value="INTEGER" />
+						<radio
+							label="${labels.survey.schema.attribute.calculated.type.real}"
+							value="REAL" />
+						<radio
+							label="${labels.survey.schema.attribute.calculated.type.text}"
+							value="TEXT" />
+					</radiogroup>
+				</fieldErrorHandler>
+			</row>
+		</rows>
+	</grid>
+	
+	<fieldErrorHandler message="@load(vmsgs['formulas'])">
+		<groupbox width="100%" closable="false" class="tableFieldSet">
+			<caption label="${labels.survey.schema.attribute.calculated.formulas}" />
+			<include src="survey_edit/schema/attribute_calculated_formulas_list.zul" />
+		</groupbox>
+	</fieldErrorHandler>
+	
+	
+	<grid class="inner">
+		<columns>
+			<column width="150px" />
+			<column />
+		</columns>
+		<rows>
+			<row>
+				<fieldErrorHandler message="@load(vmsgs['includeInDataExport'])">
+		        	<label value="${labels.survey.schema.attribute.calculated.include_in_data_export}:" />
+		        </fieldErrorHandler>
+		        <fieldErrorHandler message="@load(vmsgs['includeInDataExport'])">
+			        <checkbox checked="@load(fx.includeInDataExport eq true) @save(fx.includeInDataExport)"
+			        	onCheck="@command('applyChanges')" />
+			    </fieldErrorHandler>
+		      </row>
+			<row>
+		        <fieldErrorHandler message="@load(vmsgs['showInUI'])">
+			    	<label value="${labels.survey.schema.attribute.calculated.show_in_ui}:" />
+		        </fieldErrorHandler>
+		        <fieldErrorHandler message="@load(vmsgs['showInUI'])">
+			        <checkbox checked="@load(fx.showInUI eq true) @save(fx.showInUI)"
+			        	onCheck="@command('applyChanges')" />
+			    </fieldErrorHandler>
+		      </row>
+		</rows>
+	</grid>
+</zk>

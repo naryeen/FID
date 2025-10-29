@@ -1,0 +1,5 @@
+/node_modules/
+/build/
+/npm-debug.log
+*.code-workspace
+!.env.development.local

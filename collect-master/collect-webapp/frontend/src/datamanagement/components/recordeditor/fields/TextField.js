@@ -1,0 +1,85 @@
+import React from 'react'
+import { connect } from 'react-redux'
+import MuiTextField from '@mui/material/TextField'
+
+import { TextAttributeDefinition } from 'model/Survey'
+
+import Objects from 'utils/Objects'
+
+import AbstractField from './AbstractField'
+import * as FieldsSizes from './FieldsSizes'
+import DirtyFieldSpinner from './DirtyFieldSpinner'
+
+const transformFunctions = {
+  [TextAttributeDefinition.TextTransform.NONE]: (value) => value,
+  [TextAttributeDefinition.TextTransform.UPPERCASE]: (value) => value.toLocaleUpperCase(),
+  [TextAttributeDefinition.TextTransform.LOWERCASE]: (value) => value.toLocaleLowerCase(),
+}
+
+class TextField extends AbstractField {
+  constructor() {
+    super()
+    this.onChange = this.onChange.bind(this)
+  }
+
+  onChange(event) {
+    const { fieldDef } = this.props
+    const { attributeDefinition } = fieldDef
+    const { textTransform = TextAttributeDefinition.TextTransform.NONE } = attributeDefinition
+
+    const inputFieldValue = event.target.value
+    const valueTransformed = transformFunctions[textTransform](inputFieldValue.trimLeft())
+
+    const attribute = this.getAttribute()
+    const valuePrev = Objects.getPath(['value', 'value'], '')(attribute)
+    const valueNew = { value: valueTransformed }
+
+    // check if value has changed
+    if (valueTransformed.trim() === valuePrev) {
+      // value not changed: update UI but do not send update to server side
+      this.setState({ value: valueNew })
+    } else {
+      // value changed: updated UI and server side
+      this.updateValue({ value: valueNew })
+    }
+  }
+
+  render() {
+    const { fieldDef, inTable, parentEntity, user } = this.props
+    const { dirty, value: valueState } = this.state
+    const { record } = parentEntity
+    const { value } = valueState || {}
+    const text = Objects.defaultIfNull(value, '')
+    const { attributeDefinition } = fieldDef
+    const { textType } = attributeDefinition
+    const readOnly = !user.canEditRecordAttribute({ record, attributeDefinition })
+
+    const showAsTextArea = textType === TextAttributeDefinition.TextTypes.MEMO && !inTable
+    const inputFieldType = showAsTextArea ? 'textarea' : 'text'
+
+    return (
+      <>
+        <MuiTextField
+          autoComplete="off"
+          value={text}
+          type={inputFieldType}
+          onChange={this.onChange}
+          variant="outlined"
+          multiline={showAsTextArea}
+          rows={showAsTextArea ? 3 : 1}
+          disabled={readOnly}
+          style={{ width: FieldsSizes.getWidth({ fieldDef, inTable }) }}
+        />
+        {dirty && <DirtyFieldSpinner />}
+      </>
+    )
+  }
+}
+
+const mapStateToProps = (state) => {
+  const { session } = state
+  const { loggedUser: user } = session
+  return { user }
+}
+
+export default connect(mapStateToProps)(TextField)

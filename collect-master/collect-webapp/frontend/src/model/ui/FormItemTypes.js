@@ -1,0 +1,9 @@
+const FormItemTypes = {
+  FIELD: 'FIELD',
+  FIELDSET: 'FIELDSET',
+  MULTIPLE_FIELD: 'MULTIPLE_FIELD',
+  MULTIPLE_FIELDSET: 'MULTIPLE_FIELDSET',
+  TABLE: 'TABLE',
+}
+
+export default FormItemTypes

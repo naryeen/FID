@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration packages="org.apache.logging.log4j.core,io.sentry.log4j2">>
+	<Appenders>
+		<Console name="STDOUT" target="SYSTEM_OUT">
+			<PatternLayout
+				pattern="%d %-5p [%t] %C{2} (%F:%L) - %m%n" />
+		</Console>
+
+		<!-- the following appenders write to files -->
+
+		<RollingFile name="file"
+			fileName="${sys:catalina.base}/logs/collect.log"
+			filePattern="${sys:catalina.base}/logs/$${date:yyyy-MM}/collect-%d{MM-dd-yyyy}-%i.log.gz">
+			<PatternLayout>
+				<Pattern>%d{yyyy-MM-dd HH:mm:ss} %-5p %c - %m%n</Pattern>
+			</PatternLayout>
+			<Policies>
+				<TimeBasedTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="250 MB" />
+			</Policies>
+		</RollingFile>
+
+		<Sentry name="Sentry" />
+	</Appenders>
+
+	<Loggers>
+		<Root level="info">
+			<AppenderRef ref="STDOUT" />
+			<AppenderRef ref="file" />
+			<AppenderRef ref="Sentry" level="error" />
+		</Root>
+	</Loggers>
+</Configuration>
