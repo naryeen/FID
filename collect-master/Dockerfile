@@ -1,4 +1,6 @@
-FROM maven:3.6.3-openjdk-11-slim as build
+# FROM maven:3.6.3-openjdk-11-slim as build
+FROM maven:3.9.3-openjdk-17-slim as build
+
 
 LABEL COMPANY="Open Foris"
 LABEL MAINTAINER="openforisinitiative@gmail.com"
